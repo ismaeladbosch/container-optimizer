@@ -36,6 +36,9 @@
     "typescript": "^5"
   },
  "scripts": {
-  "build": "next build || exit 0"
+     "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
 }
 }

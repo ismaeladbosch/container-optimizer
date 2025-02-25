@@ -8,6 +8,9 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+ // Opcional: mostrar datos de sesión si los necesitas
+  console.log('Session data:', sessionData);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');

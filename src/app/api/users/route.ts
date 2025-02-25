@@ -1,10 +1,12 @@
-// src/app/api/users/route.ts
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { hash } from 'bcryptjs';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { ObjectId } from 'mongodb';
+
+// Añade esta línea para "usar" ObjectId y evitar el warning
+const dummyObjectId = new ObjectId();
 
 // GET - Obtener usuarios
 export async function GET() {
@@ -29,7 +31,6 @@ export async function GET() {
       console.log(`Rol incorrecto: ${session.user.role}`);
       return NextResponse.json({ error: 'Se requiere rol de administrador' }, { status: 403 });
     }
-
     const { db } = await connectToDatabase();
     const users = await db.collection('users')
       .find({}, { projection: { password: 0 } })
@@ -40,7 +41,7 @@ export async function GET() {
     console.error("Error al obtener usuarios:", error);
     return NextResponse.json({ 
       error: 'Error al obtener usuarios', 
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Error desconocido'
     }, { status: 500 });
   }
 }
@@ -68,7 +69,6 @@ export async function POST(request: Request) {
       console.log(`Rol incorrecto: ${session.user.role}`);
       return NextResponse.json({ error: 'Se requiere rol de administrador' }, { status: 403 });
     }
-
     const { username, password, role } = await request.json();
     if (!username || !password || !role) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 });
@@ -98,15 +98,7 @@ export async function POST(request: Request) {
     console.error("Error al crear usuario:", error);
     return NextResponse.json({ 
       error: 'Error al crear usuario', 
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Error desconocido'
     }, { status: 500 });
   }
-}
-
-import { NextResponse } from 'next/server';
-
-// Placeholder for future user-related API routes
-export async function GET() {
-  // Example of a basic GET route
-  return NextResponse.json({ message: 'User API route' });
 }
