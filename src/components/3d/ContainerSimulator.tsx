@@ -4,33 +4,53 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-const ContainerSimulator = ({ container, box, position }) => {
-  const mountRef = useRef(null);
-  const sceneRef = useRef(null);
-  const controlsRef = useRef(null);
-  const boxesRef = useRef([]);
+// Define types for props
+interface ContainerSimulatorProps {
+  container?: {
+    name?: string;
+    length: number;
+    width: number;
+    height: number;
+  };
+  box?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  position?: { x: number; y: number; z: number };
+}
+
+const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({ 
+  container, 
+  box, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  position 
+}) => {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const boxesRef = useRef<THREE.Mesh[]>([]);
   const [currentBoxCount, setCurrentBoxCount] = useState(0);
   const [selectedOrientation, setSelectedOrientation] = useState('optimal');
-  const [orientations, setOrientations] = useState([]);
-  const animationRef = useRef(null);
-  const [error, setError] = useState(null);
+  const [orientations, setOrientations] = useState<any[]>([]);
+  const animationRef = useRef<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Función para generar colores diferentes pero visualmente agradables
- const getBoxColor = (index) => {
-  const baseColors = [
-    0xff4444, 0x44ff44, 0x4444ff, 0xffff44, 
-    0xff44ff, 0x44ffff, 0xff8844, 0x88ff44, 
-    0x4488ff, 0x8844ff
-  ];
-  return baseColors[index % baseColors.length];
-};
+  const getBoxColor = (index: number) => {
+    const baseColors = [
+      0xff4444, 0x44ff44, 0x4444ff, 0xffff44, 
+      0xff44ff, 0x44ffff, 0xff8844, 0x88ff44, 
+      0x4488ff, 0x8844ff
+    ];
+    return baseColors[index % baseColors.length];
+  };
 
-  // Calcular todas las orientaciones posibles (cálculo idéntico al usado en el programa principal)
+  // Calcular todas las orientaciones posibles
   const calculateAllOrientations = () => {
     if (!container || !box) return [];
 
     try {
-      // En una caja, hay exactamente 6 formas de orientarla (3! = 6)
       const orientations = [
         // 1. L-W-H (estándar)
         {
@@ -123,7 +143,7 @@ const ContainerSimulator = ({ container, box, position }) => {
         .sort((a, b) => b.quantity - a.quantity);
 
       return validOrientations;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error calculando orientaciones:", err);
       setError("Error calculando orientaciones: " + err.message);
       return [];
@@ -138,7 +158,7 @@ const ContainerSimulator = ({ container, box, position }) => {
       if (allOrientations.length > 0) {
         setSelectedOrientation('optimal');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error configurando orientaciones:", err);
       setError("Error configurando orientaciones: " + err.message);
     }
@@ -180,30 +200,30 @@ const ContainerSimulator = ({ container, box, position }) => {
       console.warn("Error en limpieza previa:", error);
     }
 
- try {
-  // Comprobar si mountRef está disponible
-  if (!mountRef.current) {
-    console.warn('El contenedor del montaje no está disponible');
-    return;
-  }
+    try {
+      // Comprobar si mountRef está disponible
+      if (!mountRef.current) {
+        console.warn('El contenedor del montaje no está disponible');
+        return;
+      }
 
-  // Ahora que sabemos que mountRef.current existe, podemos acceder a clientWidth
-  const width = mountRef.current.clientWidth;
-  const height = 500;
-  const scene = new THREE.Scene();
-  sceneRef.current = scene;
-  scene.background = new THREE.Color(0xf0f0f0);
+      // Configuraciones iniciales
+      const width = mountRef.current.clientWidth;
+      const height = 500;
+      const scene = new THREE.Scene();
+      sceneRef.current = scene;
+      scene.background = new THREE.Color(0xf0f0f0);
 
-  // Configurar cámara
-  const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 2000);
-  const maxDim = Math.max(container.length, container.width, container.height) / 100;
-  camera.position.set(maxDim * 2, maxDim * 2, maxDim * 2);
+      // Configurar cámara
+      const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 2000);
+      const maxDim = Math.max(container.length, container.width, container.height) / 100;
+      camera.position.set(maxDim * 2, maxDim * 2, maxDim * 2);
 
-  // Configurar renderer (después de verificar mountRef.current)
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(width, height);
-  renderer.shadowMap.enabled = true;
-  mountRef.current.appendChild(renderer.domElement);
+      // Configurar renderer
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(width, height);
+      renderer.shadowMap.enabled = true;
+      mountRef.current.appendChild(renderer.domElement);
 
       // Agregar luces
       const ambLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -292,23 +312,22 @@ const ContainerSimulator = ({ container, box, position }) => {
           console.log(`Distribución ${selectedConfig.name}:`, 
             boxesInLength, 'x', boxesInWidth, 'x', boxesInHeight, 
             '=', selectedConfig.quantity);
-          
-          // Generar colores diferentes para las cajas
-        const createBox = (x, y, z, colorIndex, index) => {
-  const geometry = new THREE.BoxGeometry(
-    boxLength / 100,
-    boxHeight / 100,
-    boxWidth / 100
-  );
-  
-  const material = new THREE.MeshPhysicalMaterial({
-    color: getBoxColor(colorIndex),
-    metalness: 0.1,
-    roughness: 0.5,
-    transparent: true,
-    opacity: 0
-  });
+
+          const createBox = (x, y, z, colorIndex, index) => {
+            const geometry = new THREE.BoxGeometry(
+              boxLength / 100,
+              boxHeight / 100,
+              boxWidth / 100
+            );
             
+            const material = new THREE.MeshPhysicalMaterial({
+              color: getBoxColor(colorIndex),
+              metalness: 0.1,
+              roughness: 0.5,
+              transparent: true,
+              opacity: 0
+            });
+                  
             const mesh = new THREE.Mesh(geometry, material);
             mesh.position.set(x, y, z);
             mesh.castShadow = true;
@@ -360,7 +379,6 @@ const ContainerSimulator = ({ container, box, position }) => {
                 
                 // Usamos una combinación de posiciones para generar índices de color únicos
                 const colorIndex = (h * boxesInLength * boxesInWidth + l * boxesInWidth + w);
-
                 
                 createBox(x, y, z, colorIndex, boxIndex++);
                 boxCount++;
@@ -372,8 +390,7 @@ const ContainerSimulator = ({ container, box, position }) => {
           setCurrentBoxCount(selectedConfig.quantity);
         }
       }
-
-      // Controles de cámara
+// Controles de cámara
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;

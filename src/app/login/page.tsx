@@ -1,5 +1,4 @@
 'use client';
-// src/app/login/page.tsx
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +11,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     try {
       const result = await signIn('credentials', {
         username,
@@ -24,7 +24,8 @@ export default function Login() {
       } else {
         router.push('/dashboard');
       }
-    } catch (error) {
+    } catch (catchError) {
+      // Use a different variable name to avoid ESLint warning
       setError('Error al iniciar sesión');
     }
   };
@@ -73,7 +74,6 @@ export default function Login() {
               />
             </div>
           </div>
-
           <div>
             <button
               type="submit"

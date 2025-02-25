@@ -103,3 +103,10 @@ export async function POST(request: Request) {
   }
 }
 
+import { NextResponse } from 'next/server';
+
+// Placeholder for future user-related API routes
+export async function GET() {
+  // Example of a basic GET route
+  return NextResponse.json({ message: 'User API route' });
+}
