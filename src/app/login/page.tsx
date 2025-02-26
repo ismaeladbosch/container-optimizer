@@ -18,14 +18,14 @@ export default function Login() {
         password,
         redirect: false,
       });
-
       if (result?.error) {
         setError('Credenciales inválidas');
       } else {
         router.push('/dashboard');
       }
-    } catch (catchError) {
-      // Use a different variable name to avoid ESLint warning
+    } catch (err) {
+      // Cambiado el nombre de la variable para evitar la advertencia
+      console.error('Error de inicio de sesión:', err);
       setError('Error al iniciar sesión');
     }
   };

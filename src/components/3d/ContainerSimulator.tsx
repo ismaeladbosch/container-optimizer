@@ -1,8 +1,20 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+// Define una interfaz para las orientaciones
+interface Orientation {
+  name: string;
+  description: string;
+  dimensions: number[];
+  fits: boolean;
+  quantity?: number;
+  boxesInLength?: number;
+  boxesInWidth?: number;
+  boxesInHeight?: number;
+}
 
 // Define types for props
 interface ContainerSimulatorProps {
@@ -32,12 +44,12 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
   const boxesRef = useRef<THREE.Mesh[]>([]);
   const [currentBoxCount, setCurrentBoxCount] = useState(0);
   const [selectedOrientation, setSelectedOrientation] = useState('optimal');
-  const [orientations, setOrientations] = useState<any[]>([]);
+  const [orientations, setOrientations] = useState<Orientation[]>([]); // Tipo específico en lugar de any[]
   const animationRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Función para generar colores diferentes pero visualmente agradables
-  const getBoxColor = (index: number) => {
+  const getBoxColor = (index: number): number => {
     const baseColors = [
       0xff4444, 0x44ff44, 0x4444ff, 0xffff44, 
       0xff44ff, 0x44ffff, 0xff8844, 0x88ff44, 
@@ -46,8 +58,8 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
     return baseColors[index % baseColors.length];
   };
 
-  // Calcular todas las orientaciones posibles
-  const calculateAllOrientations = () => {
+  // Calcular todas las orientaciones posibles - Envuelto en useCallback
+  const calculateAllOrientations = useCallback((): Orientation[] => {
     if (!container || !box) return [];
 
     try {
@@ -140,15 +152,15 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
       // Filtrar orientaciones que caben y ordenar por cantidad descendente
       const validOrientations = calculatedOrientations
         .filter(o => o.fits)
-        .sort((a, b) => b.quantity - a.quantity);
+        .sort((a, b) => (b.quantity || 0) - (a.quantity || 0));
 
       return validOrientations;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error calculando orientaciones:", err);
-      setError("Error calculando orientaciones: " + err.message);
+      setError(`Error calculando orientaciones: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
-  };
+  }, [container, box]); // Dependencias para useCallback
 
   useEffect(() => {
     try {
@@ -158,11 +170,11 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
       if (allOrientations.length > 0) {
         setSelectedOrientation('optimal');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error configurando orientaciones:", err);
-      setError("Error configurando orientaciones: " + err.message);
+      setError(`Error configurando orientaciones: ${err instanceof Error ? err.message : String(err)}`);
     }
-  }, [container, box]);
+  }, [calculateAllOrientations]); // Añadimos calculateAllOrientations como dependencia
 
   useEffect(() => {
     if (!container || !box) return;
@@ -305,15 +317,15 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
         if (selectedConfig) {
           // Extraer dimensiones
           const [boxLength, boxWidth, boxHeight] = selectedConfig.dimensions;
-          const boxesInLength = selectedConfig.boxesInLength;
-          const boxesInWidth = selectedConfig.boxesInWidth;
-          const boxesInHeight = selectedConfig.boxesInHeight;
+          const boxesInLength = selectedConfig.boxesInLength || 0;
+          const boxesInWidth = selectedConfig.boxesInWidth || 0;
+          const boxesInHeight = selectedConfig.boxesInHeight || 0;
           
           console.log(`Distribución ${selectedConfig.name}:`, 
             boxesInLength, 'x', boxesInWidth, 'x', boxesInHeight, 
             '=', selectedConfig.quantity);
 
-          const createBox = (x, y, z, colorIndex, index) => {
+          const createBox = (x: number, y: number, z: number, colorIndex: number, index: number) => {
             const geometry = new THREE.BoxGeometry(
               boxLength / 100,
               boxHeight / 100,
@@ -387,10 +399,10 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
           }
           
           // Actualizar contador
-          setCurrentBoxCount(selectedConfig.quantity);
+          setCurrentBoxCount(selectedConfig.quantity || 0);
         }
       }
-// Controles de cámara
+      // Controles de cámara
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
@@ -413,7 +425,7 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
 
     } catch (err) {
       console.error("Error en Three.js:", err);
-      setError(`Error en el simulador 3D: ${err.message}`);
+      setError(`Error en el simulador 3D: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     // Cleanup
