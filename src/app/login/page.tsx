@@ -6,27 +6,26 @@ import { useRouter } from 'next/navigation';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [loginError, setLoginError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       const result = await signIn('credentials', {
         username,
         password,
         redirect: false,
       });
-
+      
       if (result?.error) {
-        setError('Credenciales inválidas');
+        setLoginError('Credenciales inválidas');
       } else {
         router.push('/dashboard');
       }
-    } catch (catchError) {
-      // Use a different variable name to avoid ESLint warning
-      setError('Error al iniciar sesión');
+    } catch (err) {
+      console.error('Error de inicio de sesión:', err);
+      setLoginError('Error al iniciar sesión');
     }
   };
 
@@ -39,8 +38,8 @@ export default function Login() {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="text-red-500 text-center text-sm">{error}</div>
+          {loginError && (
+            <div className="text-red-500 text-center text-sm">{loginError}</div>
           )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

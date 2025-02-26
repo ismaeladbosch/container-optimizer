@@ -5,8 +5,9 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { ObjectId } from 'mongodb';
 
-// Añade esta línea para "usar" ObjectId y evitar el warning
-const dummyObjectId = new ObjectId();
+export function generateUniqueId() {
+  return new ObjectId().toString();
+}
 
 // GET - Obtener usuarios
 export async function GET() {

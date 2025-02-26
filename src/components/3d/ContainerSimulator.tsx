@@ -1,10 +1,22 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-// Define types for props
+// Define una interfaz más específica para las orientaciones
+interface Orientation {
+  name: string;
+  description: string;
+  dimensions: number[]; // Arreglo de números para dimensiones
+  fits: boolean; // Indica si la caja cabe en el contenedor
+  quantity?: number; // Número opcional de cajas que caben
+  boxesInLength?: number; // Número opcional de cajas en longitud
+  boxesInWidth?: number; // Número opcional de cajas en ancho
+  boxesInHeight?: number; // Número opcional de cajas en altura
+}
+
+// Define tipos para las props del componente
 interface ContainerSimulatorProps {
   container?: {
     name?: string;
@@ -32,6 +44,10 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
   const boxesRef = useRef<THREE.Mesh[]>([]);
   const [currentBoxCount, setCurrentBoxCount] = useState(0);
   const [selectedOrientation, setSelectedOrientation] = useState('optimal');
+
+
+
+
   const [orientations, setOrientations] = useState<any[]>([]);
   const animationRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,14 +62,14 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
     return baseColors[index % baseColors.length];
   };
 
-  // Calcular todas las orientaciones posibles
-  const calculateAllOrientations = () => {
+  // Calcular todas las orientaciones posibles - Envuelto en useCallback
+  const calculateAllOrientations = useCallback((): Orientation[] => {
     if (!container || !box) return [];
 
     try {
       const orientations = [
         // 1. L-W-H (estándar)
-        {
+         {
           name: "Orientación 1",
           description: "L×W×H (estándar)",
           dimensions: [box.length, box.width, box.height],
@@ -148,7 +164,7 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
       setError("Error calculando orientaciones: " + err.message);
       return [];
     }
-  };
+  }, [container, box]); // Dependencias para useCallback
 
   useEffect(() => {
     try {
@@ -162,7 +178,7 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
       console.error("Error configurando orientaciones:", err);
       setError("Error configurando orientaciones: " + err.message);
     }
-  }, [container, box]);
+  }, [calculateAllOrientations]); // Ahora incluye calculateAllOrientations
 
   useEffect(() => {
     if (!container || !box) return;
