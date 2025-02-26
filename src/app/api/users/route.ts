@@ -2,15 +2,12 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { hash } from 'bcryptjs';
 import { getServerSession } from 'next-auth/next';
-
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { ObjectId } from 'mongodb';
-
 // Función para generar ID único
 export function generateUniqueId(): string {
   return new ObjectId().toString();
 }
-
 // GET - Obtener usuarios
 export async function GET() {
   try {
@@ -34,7 +31,6 @@ export async function GET() {
       console.log(`Rol incorrecto: ${session.user.role}`);
       return NextResponse.json({ error: 'Se requiere rol de administrador' }, { status: 403 });
     }
-
     const { db } = await connectToDatabase();
     const users = await db.collection('users')
       .find({}, { projection: { password: 0 } })
@@ -49,7 +45,6 @@ export async function GET() {
     }, { status: 500 });
   }
 }
-
 // POST - Crear usuario
 export async function POST(request: Request) {
   try {
@@ -73,7 +68,6 @@ export async function POST(request: Request) {
       console.log(`Rol incorrecto: ${session.user.role}`);
       return NextResponse.json({ error: 'Se requiere rol de administrador' }, { status: 403 });
     }
-
     const { username, password, role } = await request.json();
     if (!username || !password || !role) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 });
