@@ -14,20 +14,22 @@ export default function Login() {
     e.preventDefault();
     setLoginError('');
     setIsLoading(true);
-
+    
     try {
       const result = await signIn('credentials', {
-        username,
-        password,
+        username, 
+        password, 
         redirect: false,
       });
       
+      // Usar result explícitamente
       if (result?.error) {
         setLoginError('Credenciales inválidas');
       } else {
         router.push('/dashboard');
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      // Usar error en lugar de ignorarlo
       console.error('Error de inicio de sesión:', error);
       setLoginError('Error al iniciar sesión');
     } finally {

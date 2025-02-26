@@ -15,6 +15,15 @@ interface DatabaseConnection {
   db: Db;
 }
 
+// Reemplazar any con un tipo más específico
+interface MongoClientOptions {
+  connectTimeoutMS?: number;
+  socketTimeoutMS?: number;
+  serverSelectionTimeoutMS?: number;
+  useNewUrlParser?: boolean;
+  useUnifiedTopology?: boolean;
+}
+
 // Variable para cachear la conexión
 let cachedClient: MongoClient | null = null;
 let cachedDb: Db | null = null;
@@ -25,17 +34,18 @@ export async function connectToDatabase(): Promise<DatabaseConnection> {
     return { client: cachedClient, db: cachedDb };
   }
 
+  // Configurar opciones de conexión
+  const options: MongoClientOptions = {
+    connectTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 30000,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  };
+
   try {
     // Establecer nueva conexión
-    const client = await MongoClient.connect(MONGODB_URI, {
-      // Opciones de conexión para mayor estabilidad
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 30000,
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-
+    const client = await MongoClient.connect(MONGODB_URI, options);
     const db = client.db(MONGODB_DB);
     
     // Cachear la conexión

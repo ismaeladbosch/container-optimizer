@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
-
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 export async function PUT(
   request: NextRequest, 
   { params }: { params: { id: string } }

@@ -8,9 +8,6 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Corregir referencia a sessionData por session
-  console.log('Session data:', session);
-
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -21,12 +18,9 @@ export default function Home() {
     return <div className="flex justify-center items-center h-screen">Cargando...</div>;
   }
 
-  // Usar session de manera segura
-  const currentUser = session?.user || null;
-
   return (
     <main className="min-h-screen p-4 pt-20">
-      {currentUser ? (
+      {session?.user ? (
         <ContainerOptimizer />
       ) : (
         <div className="flex justify-center items-center h-screen">
