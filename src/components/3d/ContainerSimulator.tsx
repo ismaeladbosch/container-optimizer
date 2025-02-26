@@ -32,6 +32,9 @@ interface ContainerSimulatorProps {
   position?: { x: number; y: number; z: number };
 }
 
+// Definir tipo para orientaciones en lugar de any
+interface OrientationsArray extends Array<Orientation> {}
+
 const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({ 
   container, 
   box, 
@@ -45,10 +48,8 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
   const [currentBoxCount, setCurrentBoxCount] = useState(0);
   const [selectedOrientation, setSelectedOrientation] = useState('optimal');
 
-
-
-
-  const [orientations, setOrientations] = useState<any[]>([]);
+  // Usar el tipo definido en lugar de any
+  const [orientations, setOrientations] = useState<OrientationsArray>([]);
   const animationRef = useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -159,9 +160,9 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
         .sort((a, b) => b.quantity - a.quantity);
 
       return validOrientations;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error calculando orientaciones:", err);
-      setError("Error calculando orientaciones: " + err.message);
+      setError(`Error calculando orientaciones: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
   }, [container, box]); // Dependencias para useCallback
@@ -174,9 +175,9 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
       if (allOrientations.length > 0) {
         setSelectedOrientation('optimal');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error configurando orientaciones:", err);
-      setError("Error configurando orientaciones: " + err.message);
+      setError(`Error configurando orientaciones: ${err instanceof Error ? err.message : String(err)}`);
     }
   }, [calculateAllOrientations]); // Ahora incluye calculateAllOrientations
 
@@ -321,15 +322,15 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
         if (selectedConfig) {
           // Extraer dimensiones
           const [boxLength, boxWidth, boxHeight] = selectedConfig.dimensions;
-          const boxesInLength = selectedConfig.boxesInLength;
-          const boxesInWidth = selectedConfig.boxesInWidth;
-          const boxesInHeight = selectedConfig.boxesInHeight;
+          const boxesInLength = selectedConfig.boxesInLength || 0;
+          const boxesInWidth = selectedConfig.boxesInWidth || 0;
+          const boxesInHeight = selectedConfig.boxesInHeight || 0;
           
           console.log(`Distribución ${selectedConfig.name}:`, 
             boxesInLength, 'x', boxesInWidth, 'x', boxesInHeight, 
             '=', selectedConfig.quantity);
 
-          const createBox = (x, y, z, colorIndex, index) => {
+          const createBox = (x: number, y: number, z: number, colorIndex: number, index: number) => {
             const geometry = new THREE.BoxGeometry(
               boxLength / 100,
               boxHeight / 100,
@@ -403,7 +404,7 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
           }
           
           // Actualizar contador
-          setCurrentBoxCount(selectedConfig.quantity);
+          setCurrentBoxCount(selectedConfig.quantity || 0);
         }
       }
 // Controles de cámara
@@ -429,7 +430,7 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
 
     } catch (err) {
       console.error("Error en Three.js:", err);
-      setError(`Error en el simulador 3D: ${err.message}`);
+      setError(`Error en el simulador 3D: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     // Cleanup
