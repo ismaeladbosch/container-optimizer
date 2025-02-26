@@ -1,33 +1,51 @@
-// src/app/api/users/[id]/reset-password/route.ts
-export async function POST(
-  request: Request,
+import { NextRequest, NextResponse } from 'next/server';
+import { connectToDatabase } from '@/lib/mongodb';
+import bcrypt from 'bcryptjs';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+export async function PUT(
+  request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession();
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-
-    const { password } = await request.json();
-    if (!password) {
-      return NextResponse.json({ error: 'Se requiere contraseña' }, { status: 400 });
-    }
-
-    const hashedPassword = await hash(password, 12);
-    
     const { db } = await connectToDatabase();
+    const { newPassword } = await request.json();
+
+    // Validar la contraseña
+    if (!newPassword || newPassword.length < 6) {
+      return NextResponse.json(
+        { message: 'La contraseña debe tener al menos 6 caracteres' }, 
+        { status: 400 }
+      );
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la contraseña del usuario
     const result = await db.collection('users').updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: params.id },
       { $set: { password: hashedPassword } }
     );
 
+    // Verificar si se actualizó correctamente
     if (result.matchedCount === 0) {
-      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+      return NextResponse.json(
+        { message: 'Usuario no encontrado' }, 
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ message: 'Contraseña actualizada correctamente' });
+    return NextResponse.json(
+      { message: 'Contraseña actualizada exitosamente' }, 
+      { status: 200 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: 'Error al actualizar contraseña' }, { status: 500 });
+    // Manejo de errores con registro detallado
+    console.error('Error en reset-password:', error);
+
+    return NextResponse.json(
+      { message: 'Error al restablecer la contraseña', details: error instanceof Error ? error.message : 'Error desconocido' }, 
+      { status: 500 }
+    );
   }
 }

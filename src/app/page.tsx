@@ -1,4 +1,3 @@
-// src/app/page.tsx
 'use client';
 import ContainerOptimizer from '@/components/ContainerOptimizer';
 import { useSession } from 'next-auth/react';
@@ -21,7 +20,13 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-4 pt-20">
-      <ContainerOptimizer />
+      {session?.user ? (
+        <ContainerOptimizer />
+      ) : (
+        <div className="flex justify-center items-center h-screen">
+          No autorizado
+        </div>
+      )}
     </main>
   );
 }

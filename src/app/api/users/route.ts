@@ -1,10 +1,15 @@
-// src/app/api/users/route.ts
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { hash } from 'bcryptjs';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/route';
+
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { ObjectId } from 'mongodb';
+
+// Función para generar ID único
+export function generateUniqueId(): string {
+  return new ObjectId().toString();
+}
 
 // GET - Obtener usuarios
 export async function GET() {
@@ -40,7 +45,7 @@ export async function GET() {
     console.error("Error al obtener usuarios:", error);
     return NextResponse.json({ 
       error: 'Error al obtener usuarios', 
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Error desconocido'
     }, { status: 500 });
   }
 }
@@ -86,20 +91,22 @@ export async function POST(request: Request) {
     const hashedPassword = await hash(password, 12);
     
     // Crear usuario
-    await db.collection('users').insertOne({
+    const result = await db.collection('users').insertOne({
       username,
       password: hashedPassword,
       role,
       createdAt: new Date()
     });
     
-    return NextResponse.json({ message: 'Usuario creado correctamente' });
+    return NextResponse.json({ 
+      message: 'Usuario creado correctamente',
+      userId: result.insertedId 
+    });
   } catch (error) {
     console.error("Error al crear usuario:", error);
     return NextResponse.json({ 
       error: 'Error al crear usuario', 
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Error desconocido'
     }, { status: 500 });
   }
 }
-

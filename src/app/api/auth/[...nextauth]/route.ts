@@ -1,46 +1,71 @@
-// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '@/lib/mongodb';
-import { compare } from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 
 export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" }
+        username: { label: "Usuario", type: "text" },
+        password: { label: "Contraseña", type: "password" }
       },
       async authorize(credentials) {
+        // Verificar si se proporcionaron credenciales
         if (!credentials?.username || !credentials?.password) {
-          throw new Error('Credentials required');
+          return null;
         }
 
-        const { db } = await connectToDatabase();
-        const user = await db.collection('users').findOne({ 
-          username: credentials.username 
-        });
+        try {
+          // Conectar a la base de datos
+          const { db } = await connectToDatabase();
+          
+          // Buscar usuario
+          const user = await db.collection('users').findOne({ 
+            username: credentials.username 
+          });
 
-        if (!user) {
-          throw new Error('User not found');
+          if (!user) {
+            return null;
+          }
+
+          // Verificar contraseña
+          const isValid = await bcrypt.compare(
+            credentials.password, 
+            user.password
+          );
+
+          if (!isValid) {
+            return null;
+          }
+
+          // Devolver usuario si las credenciales son válidas
+          return {
+            id: user._id.toString(),
+            username: user.username,
+            role: user.role
+          };
+        } catch (error) {
+          console.error('Error de autenticación:', error);
+          return null;
         }
-
-        const isValid = await compare(credentials.password, user.password);
-
-        if (!isValid) {
-          throw new Error('Invalid password');
-        }
-
-        return {
-          id: user._id.toString(),
-          username: user.username,
-          role: user.role,
-        };
       }
     })
   ],
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 días
+  },
   callbacks: {
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id;
+        session.user.username = token.username;
+        session.user.role = token.role;
+      }
+      return session;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -48,23 +73,12 @@ export const authOptions = {
         token.role = user.role;
       }
       return token;
-    },
-    async session({ session, token }) {
-      session.user = {
-        id: token.id,
-        username: token.username,
-        role: token.role
-      };
-      return session;
     }
   },
   pages: {
     signIn: '/login',
   },
-  session: {
-    strategy: 'jwt',
-  },
-  debug: true, // Activa el modo debug para ver más información
+  secret: process.env.NEXTAUTH_SECRET || '$2b$12$lVoa//H5vyI7xNqjfujBJOUVpJbN.uRK0tNSSo0/L6dbmIpVaoQq6'
 };
 
 const handler = NextAuth(authOptions);
