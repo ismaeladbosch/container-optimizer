@@ -8,8 +8,8 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
- // Opcional: mostrar datos de sesión si los necesitas
-  console.log('Session data:', sessionData);
+  // Corregir referencia a sessionData por session
+  console.log('Session data:', session);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -21,13 +21,18 @@ export default function Home() {
     return <div className="flex justify-center items-center h-screen">Cargando...</div>;
   }
 
-  // Optionally use session if needed in the future
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const currentUser = session?.user;
+  // Usar session de manera segura
+  const currentUser = session?.user || null;
 
   return (
     <main className="min-h-screen p-4 pt-20">
-      <ContainerOptimizer />
+      {currentUser ? (
+        <ContainerOptimizer />
+      ) : (
+        <div className="flex justify-center items-center h-screen">
+          No autorizado
+        </div>
+      )}
     </main>
   );
 }

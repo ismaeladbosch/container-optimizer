@@ -1,3 +1,5 @@
+Untitled
+
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -29,7 +31,6 @@ interface ContainerSimulatorProps {
     width: number;
     height: number;
   };
-  position?: { x: number; y: number; z: number };
 }
 
 // Definir tipo para orientaciones en lugar de any
@@ -37,9 +38,7 @@ interface OrientationsArray extends Array<Orientation> {}
 
 const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({ 
   container, 
-  box, 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  position 
+  box
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -179,7 +178,7 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
       console.error("Error configurando orientaciones:", err);
       setError(`Error configurando orientaciones: ${err instanceof Error ? err.message : String(err)}`);
     }
-  }, [calculateAllOrientations]); // Ahora incluye calculateAllOrientations
+  }, [calculateAllOrientations]); // Incluir calculateAllOrientations
 
   useEffect(() => {
     if (!container || !box) return;
@@ -478,9 +477,10 @@ const ContainerSimulator: React.FC<ContainerSimulatorProps> = ({
     );
   }
 
-  return (
+    return (
     <div className="space-y-4">
       <div ref={mountRef} className="rounded-lg overflow-hidden shadow-lg h-[500px]" />
+
       
       <div className="space-y-2">
         <div className="flex justify-between items-center">

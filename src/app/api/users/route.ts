@@ -5,7 +5,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { ObjectId } from 'mongodb';
 
-export function generateUniqueId() {
+// Función para generar ID único
+export function generateUniqueId(): string {
   return new ObjectId().toString();
 }
 
@@ -32,6 +33,7 @@ export async function GET() {
       console.log(`Rol incorrecto: ${session.user.role}`);
       return NextResponse.json({ error: 'Se requiere rol de administrador' }, { status: 403 });
     }
+
     const { db } = await connectToDatabase();
     const users = await db.collection('users')
       .find({}, { projection: { password: 0 } })
@@ -70,6 +72,7 @@ export async function POST(request: Request) {
       console.log(`Rol incorrecto: ${session.user.role}`);
       return NextResponse.json({ error: 'Se requiere rol de administrador' }, { status: 403 });
     }
+
     const { username, password, role } = await request.json();
     if (!username || !password || !role) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 });
@@ -87,14 +90,17 @@ export async function POST(request: Request) {
     const hashedPassword = await hash(password, 12);
     
     // Crear usuario
-    await db.collection('users').insertOne({
+    const result = await db.collection('users').insertOne({
       username,
       password: hashedPassword,
       role,
       createdAt: new Date()
     });
     
-    return NextResponse.json({ message: 'Usuario creado correctamente' });
+    return NextResponse.json({ 
+      message: 'Usuario creado correctamente',
+      userId: result.insertedId 
+    });
   } catch (error) {
     console.error("Error al crear usuario:", error);
     return NextResponse.json({ 

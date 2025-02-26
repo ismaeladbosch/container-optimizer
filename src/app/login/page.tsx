@@ -7,10 +7,14 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError('');
+    setIsLoading(true);
+
     try {
       const result = await signIn('credentials', {
         username,
@@ -23,9 +27,11 @@ export default function Login() {
       } else {
         router.push('/dashboard');
       }
-    } catch (err) {
-      console.error('Error de inicio de sesión:', err);
+    } catch (error) {
+      console.error('Error de inicio de sesión:', error);
       setLoginError('Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,6 +61,7 @@ export default function Login() {
                 placeholder="Usuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -70,15 +77,17 @@ export default function Login() {
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
           </div>
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
-              Entrar
+              {isLoading ? 'Iniciando sesión...' : 'Entrar'}
             </button>
           </div>
         </form>
