@@ -16,7 +16,6 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.username || !credentials?.password) {
           return null;
         }
-
         try {
           const { db } = await connectToDatabase();
           
