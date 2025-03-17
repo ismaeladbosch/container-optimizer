@@ -1,16 +1,51 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { connectToDatabase } from '@/lib/mongodb';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [dbStatus, setDbStatus] = useState('checking...');
   const router = useRouter();
+
+  // Función para verificar la base de datos
+  useEffect(() => {
+    async function checkDatabase() {
+      try {
+        console.log("Intentando conectar a la base de datos...");
+        const { db } = await connectToDatabase();
+        console.log("Conexión establecida, buscando usuarios...");
+        
+        const users = await db.collection('users').find({}).toArray();
+        console.log("Usuarios encontrados:", users.length);
+        
+        if (users.length > 0) {
+          const safeUsers = users.map(u => ({
+            username: u.username,
+            role: u.role,
+            hasPassword: !!u.password
+          }));
+          console.log("Información de usuarios:", safeUsers);
+          setDbStatus(`Conexión exitosa: ${users.length} usuarios encontrados`);
+        } else {
+          console.log("No se encontraron usuarios");
+          setDbStatus("No se encontraron usuarios en la base de datos");
+        }
+      } catch (error) {
+        console.error("Error conectando a la base de datos:", error);
+        setDbStatus(`Error: ${error.message}`);
+      }
+    }
+    
+    checkDatabase();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Intentando iniciar sesión con:", username);
     
     try {
       const result = await signIn('credentials', {
@@ -18,13 +53,17 @@ export default function Login() {
         password,
         redirect: false,
       });
+      
+      console.log("Resultado del inicio de sesión:", result);
+      
       if (result?.error) {
+        console.error("Error de inicio de sesión:", result.error);
         setError('Credenciales inválidas');
       } else {
+        console.log("Inicio de sesión exitoso, redirigiendo...");
         router.push('/dashboard');
       }
     } catch (err) {
-      // Cambiado el nombre de la variable para evitar la advertencia
       console.error('Error de inicio de sesión:', err);
       setError('Error al iniciar sesión');
     }
@@ -37,6 +76,9 @@ export default function Login() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Iniciar Sesión
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Estado de BD: {dbStatus}
+          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
