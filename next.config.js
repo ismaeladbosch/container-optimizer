@@ -1,13 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Esto desactiva las verificaciones de ESLint durante el build
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Esto permite que el build continúe a pesar de errores de TypeScript
     ignoreBuildErrors: true,
   },
+  // Añade esta sección para evitar redirecciones para endpoints específicos
+  async redirects() {
+    return [];
+  }
 };
 
 module.exports = nextConfig;
