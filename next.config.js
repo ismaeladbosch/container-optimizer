@@ -4,11 +4,32 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true
   },
-  // Añade esta sección para evitar redirecciones para endpoints específicos
-  async redirects() {
-    return [];
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // No incluir módulos de servidor en el cliente
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        child_process: false,
+        'fs/promises': false,
+        path: false,
+        stream: false,
+        crypto: false,
+        zlib: false,
+        http: false,
+        https: false,
+        url: false,
+        util: false,
+        os: false,
+        assert: false
+      };
+    }
+    return config;
   }
 };
 

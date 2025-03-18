@@ -35,7 +35,7 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   },
- "scripts": {
-  "build": "next build || exit 0"
-}
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }
