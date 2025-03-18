@@ -1,10 +1,16 @@
-// src/app/api/auth/[...nextauth]/route.ts
-import NextAuth from 'next-auth';
-import { authOptions } from './options.server';
+// src/app/api/auth/[...nextauth]/route.js (cambia la extensión de .ts a .js)
+import NextAuth from 'next-auth/next';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { authOptions } from './workaround';
 
-// Marcar esta ruta como dinámica y solo del servidor
 export const dynamic = 'force-dynamic';
 
-const handler = NextAuth(authOptions);
+export function GET(...args) {
+  const handler = NextAuth(authOptions);
+  return handler(...args);
+}
 
-export { handler as GET, handler as POST };
+export function POST(...args) {
+  const handler = NextAuth(authOptions);
+  return handler(...args);
+}

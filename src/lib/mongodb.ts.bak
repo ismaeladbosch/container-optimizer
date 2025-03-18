@@ -1,3 +1,4 @@
+// src/lib/mongodb.ts
 import { MongoClient, Db } from 'mongodb';
 
 // Asegurarnos de que la URI se establece correctamente
@@ -25,25 +26,13 @@ interface DatabaseConnection {
 export async function connectToDatabase(): Promise<DatabaseConnection> {
   // Si ya tenemos una conexión, la reutilizamos
   if (cachedClient && cachedDb) {
-    console.log("Usando conexión en caché a MongoDB");
     return { client: cachedClient, db: cachedDb };
   }
-
-  console.log("Estableciendo nueva conexión a MongoDB");
   
   try {
-    // Opciones para evitar advertencias de deprecación
-    const options = {
-      // @ts-ignore - Options may vary by MongoDB client version
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    };
-
-    // Conectar al cliente
-    const client = await MongoClient.connect(MONGODB_URI, options);
+    // Opciones de conexión simplificadas
+    const client = await MongoClient.connect(MONGODB_URI);
     const db = client.db(MONGODB_DB);
-    
-    console.log("Conexión a MongoDB establecida exitosamente");
     
     // Almacenar en caché para futuras conexiones
     cachedClient = client;

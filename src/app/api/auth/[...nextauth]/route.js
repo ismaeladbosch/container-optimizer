@@ -1,52 +1,34 @@
-// src/app/api/auth/[...nextauth]/route.js
-import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
+import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
-
-// Configuración simple de NextAuth sin MongoDB
-const handler = NextAuth({
-  providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        // Verificación básica hardcodeada
-        if (credentials?.username === "admin" && credentials?.password === "admin123") {
-          console.log("Login exitoso para admin");
-          return { 
-            id: "1", 
-            name: "Admin User", 
-            role: "admin" 
-          };
-        }
-        console.log("Credenciales inválidas");
-        return null;
-      }
-    })
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session?.user) {
-        session.user.role = token.role;
-      }
-      return session;
+export async function POST(request) {
+  try {
+    const data = await request.json();
+    const { username, password } = data;
+    
+    // Autenticación simple hardcodeada
+    if (username === 'admin' && password === 'admin123') {
+      // Crear un token simple (no JWT real)
+      const token = Buffer.from(JSON.stringify({
+        name: 'Admin User',
+        role: 'admin',
+        exp: Date.now() + 24 * 60 * 60 * 1000 // 24 horas
+      })).toString('base64');
+      
+      return NextResponse.json({ 
+        success: true, 
+        token,
+        user: { name: 'Admin User', role: 'admin' }
+      });
     }
-  },
-  pages: {
-    signIn: '/login',
-    error: '/login'
-  },
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secret"
-});
-
-export { handler as GET, handler as POST };
+    
+    return NextResponse.json(
+      { success: false, message: 'Credenciales inválidas' },
+      { status: 401 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: 'Error de servidor' },
+      { status: 500 }
+    );
+  }
+}
