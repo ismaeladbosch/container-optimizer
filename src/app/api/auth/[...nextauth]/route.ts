@@ -1,6 +1,9 @@
 // src/app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
-import { authOptions } from './options';
+import { authOptions } from './options.server';
+
+// Marcar esta ruta como dinámica y solo del servidor
+export const dynamic = 'force-dynamic';
 
 const handler = NextAuth(authOptions);
 
