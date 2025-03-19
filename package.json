@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/three": "^0.152.1",
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",

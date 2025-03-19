@@ -1,33 +1,45 @@
-// middleware.ts
+// src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
+
+const SECRET_KEY = 'maricarmen1_secret_key_container_optimizer';
 
 export function middleware(request: NextRequest) {
-  // Permitir acceso a la página de login y a la API de autenticación
-  if (
-    request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/api/auth')
-  ) {
+  // Rutas públicas que no requieren autenticación
+  const publicPaths = ['/login', '/api/login'];
+  
+  // Comprobar si la ruta actual es pública
+  const isPublicPath = publicPaths.some(path => 
+    request.nextUrl.pathname.startsWith(path)
+  );
+
+  if (isPublicPath) {
     return NextResponse.next();
   }
 
-  // Verificar si el usuario está autenticado
-  const hasSession = request.cookies.has('next-auth.session-token') || 
-                     request.cookies.has('__Secure-next-auth.session-token');
+  // Verificar token de autenticación
+  const token = request.cookies.get('auth_token')?.value;
 
-  // Redireccionar a login si no está autenticado
-  if (!hasSession) {
-    const url = new URL('/login', request.url);
-    url.searchParams.set('callbackUrl', request.nextUrl.pathname);
-    return NextResponse.redirect(url);
+  if (!token) {
+    // Redirigir a login si no hay token
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  return NextResponse.next();
+  try {
+    // Verificar el token
+    jwt.verify(token, SECRET_KEY);
+    return NextResponse.next();
+  } catch (error) {
+    // Token inválido o expirado
+    console.error('Error de autenticación:', error);
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 }
 
+// Configurar las rutas que usarán este middleware
 export const config = {
   matcher: [
-    // Aplicar a todas las rutas excepto a los assets estáticos
-    '/((?!_next/static|_next/image|favicon.ico).*)'
+    '/((?!api/login|login|_next/static|_next/image|favicon.ico).*)',
   ],
 };

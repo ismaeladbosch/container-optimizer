@@ -1,12 +1,12 @@
 // src/components/NavBar.tsx
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { getSession, signOut } from '@/lib/auth-service';
 import Link from 'next/link';
 import { useState } from 'react';
 
 export default function NavBar() {
-  const { data: session, status } = useSession();
+  const session = getSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -25,7 +25,7 @@ export default function NavBar() {
 
           {/* Para pantallas grandes */}
           <div className="hidden md:flex md:items-center">
-            {status === 'authenticated' && (
+            {session && (
               <>
                 <Link href="/dashboard" className="text-white px-3 py-2 rounded hover:bg-blue-700">
                   Dashboard
@@ -43,7 +43,7 @@ export default function NavBar() {
                 </button>
               </>
             )}
-            {status === 'unauthenticated' && (
+            {!session && (
               <Link href="/login" className="text-white px-3 py-2 rounded hover:bg-blue-700">
                 Iniciar sesión
               </Link>
@@ -78,7 +78,7 @@ export default function NavBar() {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-blue-600">
-            {status === 'authenticated' && (
+            {session && (
               <>
                 <Link
                   href="/dashboard"
@@ -104,7 +104,7 @@ export default function NavBar() {
                 </button>
               </>
             )}
-            {status === 'unauthenticated' && (
+            {!session && (
               <Link
                 href="/login"
                 className="text-white block px-3 py-2 rounded hover:bg-blue-700"
