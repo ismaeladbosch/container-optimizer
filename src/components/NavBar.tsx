@@ -1,17 +1,55 @@
 // src/components/NavBar.tsx
 'use client';
 
-import { getSession, signOut } from '@/lib/auth-service';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function NavBar() {
-  const session = getSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Función para obtener datos del usuario
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/me');
+        const data = await response.json();
+        
+        if (data.user) {
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('Error obteniendo datos del usuario:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchUserData();
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+      // Limpiar datos locales
+      setUser(null);
+      // Redireccionar a login
+      router.push('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
+  // Estado de autenticación
+  const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <nav className="bg-blue-600 fixed w-full z-10">
@@ -25,25 +63,25 @@ export default function NavBar() {
 
           {/* Para pantallas grandes */}
           <div className="hidden md:flex md:items-center">
-            {session && (
+            {!loading && isAuthenticated && (
               <>
                 <Link href="/dashboard" className="text-white px-3 py-2 rounded hover:bg-blue-700">
                   Dashboard
                 </Link>
-                {session?.user?.role === 'admin' && (
+                {isAdmin && (
                   <Link href="/admin/users" className="text-white px-3 py-2 rounded hover:bg-blue-700">
                     Gestión de Usuarios
                   </Link>
                 )}
                 <button
-                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  onClick={handleLogout}
                   className="ml-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                 >
                   Cerrar sesión
                 </button>
               </>
             )}
-            {!session && (
+            {!loading && !isAuthenticated && (
               <Link href="/login" className="text-white px-3 py-2 rounded hover:bg-blue-700">
                 Iniciar sesión
               </Link>
@@ -78,7 +116,7 @@ export default function NavBar() {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-blue-600">
-            {session && (
+            {!loading && isAuthenticated && (
               <>
                 <Link
                   href="/dashboard"
@@ -87,7 +125,7 @@ export default function NavBar() {
                 >
                   Dashboard
                 </Link>
-                {session?.user?.role === 'admin' && (
+                {isAdmin && (
                   <Link
                     href="/admin/users"
                     className="text-white block px-3 py-2 rounded hover:bg-blue-700"
@@ -97,14 +135,14 @@ export default function NavBar() {
                   </Link>
                 )}
                 <button
-                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  onClick={handleLogout}
                   className="w-full text-left px-3 py-2 text-white rounded hover:bg-red-700"
                 >
                   Cerrar sesión
                 </button>
               </>
             )}
-            {!session && (
+            {!loading && !isAuthenticated && (
               <Link
                 href="/login"
                 className="text-white block px-3 py-2 rounded hover:bg-blue-700"
