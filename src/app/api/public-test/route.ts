@@ -1,7 +1,19 @@
-// src/app/api/public-test/route.ts
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
 import { compare } from 'bcryptjs';
+
+// Mock de usuarios para pruebas
+const MOCK_USERS = [
+  {
+    username: 'admin',
+    role: 'admin',
+    password: '$2a$10$rI4PyfMjeR5b6PKiZWAGQOmqKA5zcA.7zrbjBj8aEIGNKImLKfeAy' // admin123 hasheado
+  },
+  {
+    username: 'user',
+    role: 'user',
+    password: '$2a$10$someOtherHashedPassword' // ejemplo de otro usuario
+  }
+];
 
 export async function GET(request: Request) {
   try {
@@ -9,10 +21,8 @@ export async function GET(request: Request) {
     const username = searchParams.get('username') || 'admin';
     const password = searchParams.get('password') || 'admin123';
     
-    const { db } = await connectToDatabase();
-    
     // Buscar usuario
-    const user = await db.collection('users').findOne({ username });
+    const user = MOCK_USERS.find(u => u.username === username);
     
     let passwordCheckResult = null;
     
@@ -20,7 +30,7 @@ export async function GET(request: Request) {
       try {
         passwordCheckResult = await compare(password, user.password);
       } catch (error) {
-        passwordCheckResult = `Error al verificar contraseña: ${error.message}`;
+        passwordCheckResult = `Error al verificar contraseña: ${error instanceof Error ? error.message : String(error)}`;
       }
     }
     
@@ -39,7 +49,7 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json({
       connectionSuccessful: false,
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }

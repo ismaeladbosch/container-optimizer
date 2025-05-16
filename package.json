@@ -11,10 +11,9 @@
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.9",
     "@types/three": "^0.152.1",
-    "bcryptjs": "^3.0.2",
-    "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.475.0",
+    "mongodb": "^6.16.0",
     "next": "15.1.7",
     "papaparse": "^5.5.2",
     "react": "^19.0.0",
@@ -35,6 +34,6 @@
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   }
 }

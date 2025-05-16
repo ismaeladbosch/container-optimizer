@@ -1,25 +1,21 @@
-// src/app/layout.tsx
-'use client';
+import './globals.css'
+import type { Metadata } from 'next'
 
-import './globals.css';
-import { SessionProvider } from 'next-auth/react';
-import NavBar from '@/components/NavBar';
+export const metadata: Metadata = {
+  title: 'Optimizador de Contenedores',
+  description: 'Herramienta para optimizar el almacenamiento en contenedores',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="es">
       <body>
-        <SessionProvider>
-          <NavBar />
-          <main className="pt-16">
-            {children}
-          </main>
-        </SessionProvider>
+        {children}
       </body>
     </html>
-  );
+  )
 }
